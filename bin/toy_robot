@@ -1,0 +1,9 @@
+#!/usr/bin/env ruby
+require_relative "../lib/toy_robot"
+
+input = ARGV[0] ? File.open(ARGV[0], "r") : $stdin
+begin
+  ToyRobot::Simulator.new(input: input, output: $stdout).run
+ensure
+  input.close if ARGV[0] && !input.closed?
+end
