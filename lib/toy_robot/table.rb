@@ -1,9 +1,11 @@
+# frozen_string_literal: true
+
 module ToyRobot
   class Table
     attr_reader :width, :height
 
     def initialize(width: 5, height: 5)
-      raise ArgumentError, "dimensions must be positive" if width <= 0 || height <= 0
+      raise ArgumentError, 'dimensions must be positive' if width <= 0 || height <= 0
 
       @width = width
       @height = height

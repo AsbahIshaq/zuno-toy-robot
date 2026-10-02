@@ -1,0 +1,49 @@
+plugins:
+  - rubocop-rspec
+
+AllCops:
+  TargetRubyVersion: 3.2
+  NewCops: enable
+  SuggestExtensions: false
+  Exclude:
+    - "vendor/**/*"
+    - "tmp/**/*"
+    - "bin/bundle"
+
+# Internal domain classes with self-explanatory names don't need YARD-style headers.
+Style/Documentation:
+  Enabled: false
+
+# `x`, `y`, `dx`, `dy` are the idiomatic names for coordinates and deltas.
+Naming/MethodParameterName:
+  AllowedNames:
+    - x
+    - y
+    - dx
+    - dy
+
+# Action verbs (place/move/left/right) returning true/false as a
+# success flag is a common Ruby pattern — renaming them to end in `?`
+# would read as a question rather than a command.
+Naming/PredicateMethod:
+  Enabled: false
+
+# `Simulator#run` is a straightforward top-level loop — splitting it
+# further would add indirection without clarity.
+Metrics/MethodLength:
+  Max: 15
+
+# Flat `spec/` layout is also a convention; we don't mirror `lib/toy_robot/` into `spec/toy_robot/`.
+RSpec/SpecFilePathFormat:
+  Enabled: false
+
+# Specs are naturally long — don't police block length there.
+Metrics/BlockLength:
+  Exclude:
+    - "spec/**/*"
+
+RSpec/ExampleLength:
+  Max: 10
+
+RSpec/MultipleExpectations:
+  Max: 3

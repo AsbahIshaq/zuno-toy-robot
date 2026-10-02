@@ -68,13 +68,22 @@ Two design choices worth calling out:
 
 ## Future Improvements
 
-Given more time:
+With more time, the following enhancements would be worth considering.
 
-- **First-class `Command` objects** instead of `[symbol, args]` tuples — one class per command with a `#apply(robot)` method. Enables the open/closed principle for new commands and makes command-level middleware (logging, undo, dry-run) trivial.
-- **Obstacles on the table** — pass a set of blocked cells to `Table` and consult it in `#in_bounds?` (or introduce a distinct `#passable?`).
-- **REPL mode** with a prompt and readline history when STDIN is a TTY.
-- **Property-based tests** via `rantly` — e.g. "for any random command stream, the robot never reports coordinates outside the table."
-- **Rubocop + CI** — check the styleguide on every push (`rubocop` with `rubocop-rspec`), run `rspec` in GitHub Actions.
-- **Multi-robot support** with collision detection — a `Board` composing `Table` + a collection of `Robot`s, and a routing layer for identifying which robot each command targets.
-- **Pluggable reporters** — a `Reporter` interface with plain-text (current), JSON, and structured-log implementations selected via CLI flag.
-- **Structured errors on `--strict`** — today unknown lines are silently skipped (the spec allows it). A `--strict` flag could raise/exit on parse errors, useful for scripted pipelines.
+**Command history in interactive mode.** The prompt currently reads raw input one line at a time, so pressing the up arrow does nothing useful. Integrating Ruby's standard `readline` library would allow users to recall and edit previous commands, and optionally persist history between sessions.
+
+**Friendlier error messages.** Passing a non-existent file as an argument currently produces a raw Ruby stacktrace. A clear message such as `Error: file not found: <path>` written to stderr, followed by a non-zero exit code, would be more appropriate for a command-line tool.
+
+**One class per command.** The parser currently returns a tuple of the form `[name, args]`, which the simulator unpacks with a case statement. Promoting each command to its own small class with an `apply(robot)` method would remove the case statement and allow new commands to be added without touching the simulator. It would also make it straightforward to layer in cross-cutting features such as logging, dry-run mode, or an undo stack.
+
+**Obstacles on the table.** The specification states that the table has no obstructions, but the design is prepared for them. The `Table` object already owns all bounds-related questions, so a set of blocked cells could be passed in and consulted alongside the edge check without any changes elsewhere.
+
+**Multi-robot support.** A `Board` object holding a `Table` and a collection of robots, with each command targeting a specific robot by identifier, would support simulations with more than one actor. Collision detection would then live on the board, keeping each individual robot unaware of its peers.
+
+**Alternative output formats.** The current `REPORT` output is a comma-separated string written to standard output. A pluggable reporter abstraction would allow the same simulation to emit JSON for machine consumption, structured logs for observability platforms, or a visual grid for debugging — selectable at the command line.
+
+**Property-based testing.** The current RSpec suite exercises specific cases exhaustively. A property-based testing library such as `rantly` would allow invariants to be asserted over randomly generated command streams — for example, that the robot's reported position is always within the table, regardless of the input.
+
+**Continuous integration.** A GitHub Actions workflow running `rspec` and `rubocop` on every push would catch regressions before they land. Running the suite across a small matrix of Ruby versions (3.2, 3.3, 3.4) would also catch version-specific issues early.
+
+**Strict mode.** Malformed commands are currently tolerated — they produce `*ignored*` output and the simulator continues. A `--strict` flag that exits with a non-zero status on the first invalid line would be more appropriate when the simulator is being driven programmatically by another script or test harness.
