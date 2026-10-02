@@ -15,7 +15,7 @@ bundle install
 
 ## Usage
 
-The CLI accepts commands from a file path, standard input, or an interactive prompt.
+The CLI accepts commands from a file or an interactive prompt.
 
 **From a file.** The repo ships with `demo.txt`, a sample script that exercises pre-PLACE discard, boundary enforcement on every edge, rotation, re-placement, and the PDF's Scenario C:
 
@@ -44,15 +44,6 @@ Expected output:
 ```
 
 Each `*ignored*` line marks a command the simulator refused — either because no `PLACE` had been issued yet or because the move would have taken the robot off the table.
-
-**From standard input.** Any means of piping text works — `printf`, `cat`, a heredoc, or shell redirection:
-
-```sh
-printf "PLACE 0,0,NORTH\nMOVE\nREPORT\n" | bundle exec bin/toy_robot
-# => 0,1,NORTH
-
-bundle exec bin/toy_robot < demo.txt
-```
 
 **Interactive mode.** Running the binary with no arguments drops you into a prompt. Type commands one at a time; use `QUIT` (or `EXIT`, or `Ctrl-D`) to leave:
 
