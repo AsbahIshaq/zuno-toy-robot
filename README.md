@@ -15,20 +15,60 @@ bundle install
 
 ## Usage
 
-The CLI accepts commands from either a file path or standard input.
+The CLI accepts commands from a file path, standard input, or an interactive prompt.
 
-**From a file:**
+**From a file.** The repo ships with `demo.txt`, a sample script that exercises pre-PLACE discard, boundary enforcement on every edge, rotation, re-placement, and the PDF's Scenario C:
 
 ```sh
-bundle exec bin/toy_robot spec/fixtures/scenario_c.txt
-# => 3,3,NORTH
+bundle exec bin/toy_robot demo.txt
 ```
 
-**From STDIN:**
+Expected output:
+
+```
+*ignored*
+*ignored*
+*ignored*
+0,0,NORTH
+*ignored*
+0,4,NORTH
+*ignored*
+0,4,NORTH
+0,4,EAST
+4,4,EAST
+*ignored*
+4,4,EAST
+*ignored*
+4,4,NORTH
+3,3,NORTH
+```
+
+Each `*ignored*` line marks a command the simulator refused — either because no `PLACE` had been issued yet or because the move would have taken the robot off the table.
+
+**From standard input.** Any means of piping text works — `printf`, `cat`, a heredoc, or shell redirection:
 
 ```sh
 printf "PLACE 0,0,NORTH\nMOVE\nREPORT\n" | bundle exec bin/toy_robot
 # => 0,1,NORTH
+
+bundle exec bin/toy_robot < demo.txt
+```
+
+**Interactive mode.** Running the binary with no arguments drops you into a prompt. Type commands one at a time; use `QUIT` (or `EXIT`, or `Ctrl-D`) to leave:
+
+```
+$ bundle exec bin/toy_robot
+Toy Robot Simulator
+Commands: PLACE X,Y,F | MOVE | LEFT | RIGHT | REPORT | QUIT
+> PLACE 2,3,NORTH
+> REPORT
+2,3,NORTH
+> MOVE
+> REPORT
+2,4,NORTH
+> MOVE
+*ignored*
+> QUIT
 ```
 
 ### Command language
@@ -40,8 +80,9 @@ printf "PLACE 0,0,NORTH\nMOVE\nREPORT\n" | bundle exec bin/toy_robot
 | `LEFT` | Rotate 90° counter-clockwise. |
 | `RIGHT` | Rotate 90° clockwise. |
 | `REPORT` | Print `X,Y,FACING`. |
+| `QUIT` / `EXIT` | End the session cleanly. |
 
-Any command issued before the first successful `PLACE` is silently discarded. Any `MOVE` (or initial `PLACE`) that would put the robot off the table is ignored, and subsequent commands continue as normal.
+Any command issued before the first successful `PLACE` is refused, as is any `MOVE` (or initial `PLACE`) that would put the robot off the table. Refusals are surfaced in the output as `*ignored*` so you can see which commands had no effect; the simulator continues to process subsequent commands as normal.
 
 ## Tests
 
@@ -81,8 +122,6 @@ With more time, the following enhancements would be worth considering.
 **Multi-robot support.** A `Board` object holding a `Table` and a collection of robots, with each command targeting a specific robot by identifier, would support simulations with more than one actor. Collision detection would then live on the board, keeping each individual robot unaware of its peers.
 
 **Alternative output formats.** The current `REPORT` output is a comma-separated string written to standard output. A pluggable reporter abstraction would allow the same simulation to emit JSON for machine consumption, structured logs for observability platforms, or a visual grid for debugging — selectable at the command line.
-
-**Property-based testing.** The current RSpec suite exercises specific cases exhaustively. A property-based testing library such as `rantly` would allow invariants to be asserted over randomly generated command streams — for example, that the robot's reported position is always within the table, regardless of the input.
 
 **Continuous integration.** A GitHub Actions workflow running `rspec` and `rubocop` on every push would catch regressions before they land. Running the suite across a small matrix of Ruby versions (3.2, 3.3, 3.4) would also catch version-specific issues early.
 
